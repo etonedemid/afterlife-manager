@@ -164,6 +164,12 @@ final class PluginContext extends ContextWrapper {
             if (inflater == null) inflater = LayoutInflater.from(getBaseContext()).cloneInContext(this);
             return inflater;
         }
+        if (ACCOUNT_SERVICE.equals(name)) return plugin.accountManager(this);
+        return super.getSystemService(name);
+    }
+
+    /** The real AccountManager, for AccountManagerHook to wrap. */
+    Object realSystemService(String name) {
         return super.getSystemService(name);
     }
 

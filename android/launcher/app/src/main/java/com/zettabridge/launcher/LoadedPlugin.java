@@ -43,6 +43,7 @@ final class LoadedPlugin {
     /** Content providers started in-process (kept alive for the process lifetime). */
     final List<ContentProvider> providers = new ArrayList<>();
     Application application;
+    private android.accounts.AccountManager accountManager;
 
     private LoadedPlugin(PluginRecord record, ApplicationInfo appInfo, Resources resources, ClassLoader classLoader) {
         this.record = record;
@@ -51,6 +52,15 @@ final class LoadedPlugin {
         this.appInfo = appInfo;
         this.resources = resources;
         this.classLoader = classLoader;
+    }
+
+    /** One AccountManager per plugin: plugin account types are answered in-process. */
+    synchronized android.accounts.AccountManager accountManager(PluginContext context) {
+        if (accountManager == null) {
+            accountManager = AccountManagerHook.wrap(context, this,
+                    (android.accounts.AccountManager) context.realSystemService(Context.ACCOUNT_SERVICE));
+        }
+        return accountManager;
     }
 
     Bitmap icon() {
