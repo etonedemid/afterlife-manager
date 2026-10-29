@@ -79,6 +79,19 @@ final class PackageManagerHook implements InvocationHandler {
             Object result = method.invoke(real, args);
             return rewrite(method.getName(), args, result);
         } catch (InvocationTargetException e) {
+            // Plugin components are not in the launcher's manifest, so the system rejects toggling
+            // them (ChatOn disables its own receivers at startup). There is no state to keep: ignore.
+            if (e.getCause() instanceof IllegalArgumentException) {
+                switch (method.getName()) {
+                    case "setComponentEnabledSetting":
+                    case "setComponentEnabledSettings":
+                        return null;
+                    case "getComponentEnabledSetting":
+                        return PackageManager.COMPONENT_ENABLED_STATE_DEFAULT;
+                    default:
+                        break;
+                }
+            }
             Object fallback = rewriteMissing(method.getName(), args);
             if (fallback != null) return fallback;
             throw e.getCause();
